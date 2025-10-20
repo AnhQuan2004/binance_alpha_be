@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Query, Request, Response, HTTPException
-from typing import Literal
+from typing import Literal, List
 from datetime import datetime
-from database import get_collection
-from utils import filter_by_range, serialize_airdrop, generate_etag
+from database import get_collection, get_coin_collection
+from models import CoinData, CoinDataResponse
+from utils import filter_by_range, serialize_airdrop, generate_etag, serialize_coin
 
 router = APIRouter()
 
@@ -67,3 +68,26 @@ async def get_airdrops(
         "items": filtered_items,
         "etag": etag
     }
+
+
+@router.post("/api/coins", status_code=201)
+async def save_coin_data(coin_data: CoinData):
+    """Save coin data"""
+    collection = get_coin_collection()
+    
+    doc = coin_data.dict()
+    
+    await collection.insert_one(doc)
+    
+    return {"status": "success", "data": doc}
+
+
+@router.get("/api/coins/{coin_id}", response_model=List[CoinDataResponse])
+async def get_coin_data(coin_id: str):
+    """Get all data for a specific coin"""
+    collection = get_coin_collection()
+    
+    cursor = collection.find({"coin_id": coin_id})
+    items = await cursor.to_list(length=1000)
+    
+    return [serialize_coin(item) for item in items]

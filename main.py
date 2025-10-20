@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from database import Database
-from routes import public, admin
+from routes import public, admin, token, alpha_insight
 
 
 @asynccontextmanager
@@ -26,9 +26,9 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["ETag", "Last-Modified"],
 )
@@ -54,6 +54,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 # Include routers
 app.include_router(public.router, tags=["Public"])
 app.include_router(admin.router, tags=["Admin"])
+app.include_router(token.router, tags=["Tokens"])
+app.include_router(alpha_insight.router, tags=["Alpha Insights"])
 
 
 @app.get("/")
@@ -75,4 +77,4 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

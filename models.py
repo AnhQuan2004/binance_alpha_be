@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, HttpUrl, validator
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date, time as dt_time
 from bson import ObjectId
 
 class PyObjectId(ObjectId):
@@ -22,28 +22,47 @@ class PyObjectId(ObjectId):
 class AirdropBase(BaseModel):
     project: str = Field(..., min_length=1, max_length=100)
     alias: str = Field(..., min_length=1, max_length=100)
-    points: float = Field(..., ge=0)
-    amount: float = Field(..., ge=0)
-    time_iso: str = Field(..., description="ISO format: 2025-10-08T14:00:00+07:00")
-    timezone: str = Field(..., description="e.g., Asia/Ho_Chi_Minh")
+    points: Optional[float] = Field(None, ge=0)
+    amount: Optional[float] = Field(None, ge=0)
+    event_date: date = Field(..., description="Event date (YYYY-MM-DD)")
+    event_time: Optional[dt_time] = Field(None, description="Event time (HH:MM or HH:MM:SS)")
+    timezone: Optional[str] = Field(None, description="e.g., Asia/Ho_Chi_Minh; defaults to UTC when omitted")
     phase: Optional[str] = Field(None, max_length=100)
     x: Optional[str] = None
-    raised: Optional[float] = Field(None, ge=0)
+    raised: Optional[str] = None
     source_link: Optional[str] = None
+    image_url: Optional[str] = None
 
-    @validator('time_iso')
-    def validate_time_iso(cls, v):
-        try:
-            datetime.fromisoformat(v.replace('Z', '+00:00'))
-        except ValueError:
-            raise ValueError('Invalid ISO datetime format')
+    @validator('event_time', pre=True)
+    def empty_time_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @validator('timezone', pre=True)
+    def empty_timezone_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
         return v
 
     @validator('timezone')
     def validate_timezone(cls, v):
-        import pytz
-        if v not in pytz.all_timezones:
-            raise ValueError('Invalid timezone')
+        if v is not None:
+            import pytz
+            if v not in pytz.all_timezones:
+                raise ValueError('Invalid timezone')
+        return v
+
+    @validator('points', 'amount', pre=True)
+    def empty_numeric_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
         return v
 
 
@@ -56,20 +75,29 @@ class AirdropUpdate(BaseModel):
     alias: Optional[str] = Field(None, min_length=1, max_length=100)
     points: Optional[float] = Field(None, ge=0)
     amount: Optional[float] = Field(None, ge=0)
-    time_iso: Optional[str] = None
+    event_date: Optional[date] = None
+    event_time: Optional[dt_time] = None
     timezone: Optional[str] = None
     phase: Optional[str] = Field(None, max_length=100)
     x: Optional[str] = None
-    raised: Optional[float] = Field(None, ge=0)
+    raised: Optional[str] = None
     source_link: Optional[str] = None
+    image_url: Optional[str] = None
 
-    @validator('time_iso')
-    def validate_time_iso(cls, v):
-        if v is not None:
-            try:
-                datetime.fromisoformat(v.replace('Z', '+00:00'))
-            except ValueError:
-                raise ValueError('Invalid ISO datetime format')
+    @validator('event_time', pre=True)
+    def empty_time_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @validator('timezone', pre=True)
+    def empty_timezone_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
         return v
 
     @validator('timezone')
@@ -97,17 +125,83 @@ class AirdropResponse(BaseModel):
     id: str
     project: str
     alias: str
-    points: float
-    amount: float
-    time_iso: str
-    timezone: str
+    points: Optional[float]
+    amount: Optional[float]
+    event_date: Optional[str]
+    event_time: Optional[str]
+    timezone: Optional[str]
     phase: Optional[str]
     x: Optional[str]
-    raised: Optional[float]
+    raised: Optional[str]
     source_link: Optional[str]
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     deleted: bool = False
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CoinData(BaseModel):
+    coin_id: str
+    time: datetime
+    price: float
+
+
+class CoinDataResponse(CoinData):
+    id: str
+
+
+class TokenBase(BaseModel):
+    name: str
+    apiUrl: str
+    staggerDelay: int
+    multiplier: float
+
+
+class TokenCreate(TokenBase):
+    pass
+
+
+class TokenUpdate(BaseModel):
+    name: Optional[str] = None
+    apiUrl: Optional[str] = None
+    staggerDelay: Optional[int] = None
+    multiplier: Optional[float] = None
+
+
+class TokenResponse(TokenBase):
+    id: str
+
+
+class AlphaInsightBase(BaseModel):
+    title: str
+    category: str
+    token: str
+    platform: str
+    raised: str
+    description: str
+    date: str
+    imageUrl: Optional[str] = None
+    url: Optional[str] = None
+
+
+class AlphaInsightCreate(AlphaInsightBase):
+    pass
+
+
+class AlphaInsightUpdate(BaseModel):
+    title: Optional[str] = None
+    category: Optional[str] = None
+    token: Optional[str] = None
+    platform: Optional[str] = None
+    raised: Optional[str] = None
+    description: Optional[str] = None
+    date: Optional[str] = None
+    imageUrl: Optional[str] = None
+    url: Optional[str] = None
+
+
+class AlphaInsightResponse(AlphaInsightBase):
+    id: str

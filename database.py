@@ -29,3 +29,18 @@ class Database:
 def get_collection():
     db = Database.get_db()
     return db["airdrops"]
+
+
+def get_coin_collection():
+    db = Database.get_db()
+    return db["coins"]
+
+
+def get_token_collection():
+    db = Database.get_db()
+    return db["tokens"]
+
+
+def get_alpha_insight_collection():
+    db = Database.get_db()
+    return db["alpha_insights"]

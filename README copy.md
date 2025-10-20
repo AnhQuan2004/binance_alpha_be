@@ -42,7 +42,7 @@ ADMIN_PASSWORD=your_secure_password_here
 python main.py
 ```
 
-Server will run at `http://localhost:8000`
+Server will run at `http://localhost:8001`
 
 ## 📚 API Documentation
 
@@ -62,13 +62,13 @@ GET /api/airdrops?range=today|upcoming|all
 **Example:**
 ```bash
 # Get all airdrops
-curl http://localhost:8000/api/airdrops?range=all
+curl http://localhost:8001/api/airdrops?range=all
 
 # Get today's airdrops
-curl http://localhost:8000/api/airdrops?range=today
+curl http://localhost:8001/api/airdrops?range=today
 
 # Get upcoming airdrops
-curl http://localhost:8000/api/airdrops?range=upcoming
+curl http://localhost:8001/api/airdrops?range=upcoming
 ```
 
 **Response:**
@@ -81,6 +81,8 @@ curl http://localhost:8000/api/airdrops?range=upcoming
       "alias": "SLIMEX",
       "points": 200,
       "amount": 5000,
+      "event_date": "2025-10-08",
+      "event_time": "14:00:00",
       "time_iso": "2025-10-08T14:00:00+07:00",
       "timezone": "Asia/Ho_Chi_Minh",
       "phase": "Phase 2",
@@ -105,14 +107,15 @@ POST /api/airdrops
 
 **Example:**
 ```bash
-curl -X POST http://localhost:8000/api/airdrops \
+curl -X POST http://localhost:8001/api/airdrops \
   -H "Content-Type: application/json" \
   -d '{
     "project": "SLX",
     "alias": "SLIMEX",
     "points": 200,
     "amount": 5000,
-    "time_iso": "2025-10-08T14:00:00+07:00",
+    "event_date": "2025-10-08",
+    "event_time": "14:00",
     "timezone": "Asia/Ho_Chi_Minh",
     "phase": "Phase 2",
     "x": "https://x.com/slimex",
@@ -121,6 +124,8 @@ curl -X POST http://localhost:8000/api/airdrops \
   }'
 ```
 
+> ℹ️ Truyền ngày trong `event_date` (bắt buộc) và giờ trong `event_time` (tùy chọn, định dạng `HH:MM` hoặc `HH:MM:SS`). Nếu chưa biết giờ, bỏ trống `event_time`; hệ thống vẫn lưu giờ mặc định 00:00 theo múi giờ đã chọn.
+
 #### Update Airdrop
 ```bash
 PUT /api/airdrops/{id}
@@ -128,39 +133,39 @@ PUT /api/airdrops/{id}
 
 **Example:**
 ```bash
-curl -X PUT http://localhost:8000/api/airdrops/507f1f77bcf86cd799439011 \
+curl -X PUT http://localhost:8001/api/airdrops/507f1f77bcf86cd799439011 \
   -H "Content-Type: application/json" \
   -d '{"points": 300}'
 ```
 
-#### Delete Airdrop (Soft Delete)
+#### Delete Airdrop (Hard Delete)
 ```bash
 DELETE /api/airdrops/{id}
 ```
 
 **Example:**
 ```bash
-curl -X DELETE http://localhost:8000/api/airdrops/507f1f77bcf86cd799439011
+curl -X DELETE http://localhost:8001/api/airdrops/507f1f77bcf86cd799439011
 ```
 
-#### Get All Airdrops (Including Deleted)
+#### Get All Airdrops
 ```bash
 GET /api/admin/airdrops
 ```
 
 **Example:**
 ```bash
-curl http://localhost:8000/api/admin/airdrops
+curl http://localhost:8001/api/admin/airdrops
 ```
 
-#### Get Deleted Airdrops
+#### Get Deleted Airdrops (Legacy - always empty with hard deletes)
 ```bash
 GET /api/admin/airdrops/deleted
 ```
 
 **Example:**
 ```bash
-curl http://localhost:8000/api/admin/airdrops/deleted
+curl http://localhost:8001/api/admin/airdrops/deleted
 ```
 
 ## 🔧 Features
@@ -168,7 +173,7 @@ curl http://localhost:8000/api/admin/airdrops/deleted
 ### ✨ Core Features
 - **CRUD Operations**: Complete Create, Read, Update, Delete functionality
 - **Admin Authentication**: HTTP Basic Auth for admin endpoints
-- **Soft Delete**: Items are marked as deleted, not removed from database
+- **Hard Delete**: Admin delete removes airdrops permanently
 - **Timezone Support**: Full timezone awareness for filtering
 - **ETag Caching**: Efficient caching with 304 Not Modified responses
 
@@ -195,10 +200,12 @@ curl http://localhost:8000/api/admin/airdrops/deleted
 ### Airdrop Fields
 - `project`: Project name (required, 1-100 chars)
 - `alias`: Project alias (required, 1-100 chars)
-- `points`: Points value (required, >= 0)
-- `amount`: Amount value (required, >= 0)
-- `time_iso`: ISO datetime string (required)
-- `timezone`: Timezone string (required, validated)
+- `points`: Points value (optional, >= 0 when provided)
+- `amount`: Amount value (optional, >= 0 when provided)
+- `event_date`: Event date (required, `YYYY-MM-DD`)
+- `event_time`: Event time (optional, `HH:MM` or `HH:MM:SS`)
+- `time_iso`: Combined ISO datetime (auto-generated from date/time & timezone)
+- `timezone`: Timezone string (optional, validated; defaults to UTC when omitted)
 - `phase`: Optional phase information
 - `x`: Optional X/Twitter URL
 - `raised`: Optional raised amount
@@ -248,7 +255,7 @@ python main.py
 
 ### Production Deployment
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
 ### Environment Variables
@@ -259,16 +266,16 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ## 🔍 API Testing
 
 ### Interactive Documentation
-Visit `http://localhost:8000/docs` for Swagger UI documentation.
+Visit `http://localhost:8001/docs` for Swagger UI documentation.
 
 ### Health Check
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 ```
 
 ### Root Endpoint
 ```bash
-curl http://localhost:8000/
+curl http://localhost:8001/
 ```
 
 ## 📦 Dependencies

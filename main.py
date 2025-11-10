@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from database import Database
-from routes import public, admin, token, alpha_insight
+from routes import public, admin, token, alpha_insight, accounts, transactions
 
 
 @asynccontextmanager
@@ -30,7 +30,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["ETag", "Last-Modified"],
+    expose_headers=["ETag", "Last-Modified", "Content-Type"],
+    max_age=3600,
 )
 
 
@@ -56,6 +57,8 @@ app.include_router(public.router, tags=["Public"])
 app.include_router(admin.router, tags=["Admin"])
 app.include_router(token.router, tags=["Tokens"])
 app.include_router(alpha_insight.router, tags=["Alpha Insights"])
+app.include_router(accounts.router, tags=["Accounts"])
+app.include_router(transactions.router, tags=["Transactions"])
 
 
 @app.get("/")
@@ -77,4 +80,4 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl, validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date, time as dt_time
 from bson import ObjectId
 
@@ -204,4 +204,76 @@ class AlphaInsightUpdate(BaseModel):
 
 
 class AlphaInsightResponse(AlphaInsightBase):
+    id: str
+
+
+class AccountBase(BaseModel):
+    name: str
+    balance: float
+    alphaPoints: float
+
+
+class AccountCreate(AccountBase):
+    pass
+
+
+class AccountUpdate(BaseModel):
+    name: Optional[str] = None
+    balance: Optional[float] = None
+    alphaPoints: Optional[float] = None
+
+
+class AccountResponse(AccountBase):
+    id: str
+
+
+class AirdropItem(BaseModel):
+    token: str
+    amount: float
+    price: float
+    value: float
+
+
+class TransactionBase(BaseModel):
+    accountId: str
+    date: str
+    alphaPoints: float
+    initialBalance: float
+    finalBalance: float
+    tradeFee: float
+    note: Optional[str] = None
+    airdrops: List[AirdropItem] = []
+    # Legacy fields
+    airdropToken: Optional[str] = None
+    airdropAmount: Optional[float] = None
+    airdropTokenPrice: Optional[float] = None
+    pnl: float
+    alphaReward: float
+    airdropValue: Optional[float] = None
+    totalClaim: float
+
+
+class TransactionCreate(TransactionBase):
+    pass
+
+
+class TransactionUpdate(BaseModel):
+    accountId: Optional[str] = None
+    date: Optional[str] = None
+    alphaPoints: Optional[float] = None
+    initialBalance: Optional[float] = None
+    finalBalance: Optional[float] = None
+    tradeFee: Optional[float] = None
+    note: Optional[str] = None
+    airdrops: Optional[List[AirdropItem]] = None
+    airdropToken: Optional[str] = None
+    airdropAmount: Optional[float] = None
+    airdropTokenPrice: Optional[float] = None
+    pnl: Optional[float] = None
+    alphaReward: Optional[float] = None
+    airdropValue: Optional[float] = None
+    totalClaim: Optional[float] = None
+
+
+class TransactionResponse(TransactionBase):
     id: str

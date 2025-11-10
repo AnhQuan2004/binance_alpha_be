@@ -26,9 +26,9 @@ class Database:
             cls.client = None
 
 
-def get_collection():
+def get_collection(collection_name: str = "airdrops"):
     db = Database.get_db()
-    return db["airdrops"]
+    return db[collection_name]
 
 
 def get_coin_collection():
